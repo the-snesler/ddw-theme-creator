@@ -1,4 +1,4 @@
-const Footer = props => (
+const Footer = () => (
     <footer className="fade-in">
         <div className="footer-items">
             <div className="footer-link">

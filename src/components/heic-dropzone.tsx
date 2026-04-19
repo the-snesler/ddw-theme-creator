@@ -3,8 +3,12 @@ import { useDropzone } from "react-dropzone"
 import { IoIosCheckmarkCircle } from "react-icons/io"
 import { MdCancel, MdAdd } from "react-icons/md"
 
-const HeicDropzone = props => {
-    const baseStyle = {
+interface HeicDropzoneProps {
+    onDrop: (file: File) => void
+}
+
+const HeicDropzone = ({ onDrop }: HeicDropzoneProps) => {
+    const baseStyle: React.CSSProperties = {
         flex: 1,
         display: "flex",
         flexDirection: "column",
@@ -21,47 +25,32 @@ const HeicDropzone = props => {
         width: "calc(100% - 0.5rem * 3)",
         height: 100,
         padding: "0.5rem",
-        boxSizing: "border-box"
-    };
+        boxSizing: "border-box",
+    }
 
-    const acceptStyle = {
-        borderColor: "#00E676",
-        color: "#00E676"
-    };
+    const acceptStyle: React.CSSProperties = { borderColor: "#00E676", color: "#00E676" }
+    const rejectStyle: React.CSSProperties = { borderColor: "#FF1744", color: "#FF1744" }
 
-    const rejectStyle = {
-        borderColor: "#FF1744",
-        color: "#FF1744"
-    };
-
-    const {
-        getRootProps,
-        getInputProps,
-        isDragAccept,
-        isDragReject
-    } = useDropzone({
-        accept: ".heic",
+    const { getRootProps, getInputProps, isDragAccept, isDragReject } = useDropzone({
+        accept: { "image/heic": [".heic"] },
         onDrop: (acceptedFiles) => {
-            props.onDrop(acceptedFiles[0])
-        }
+            onDrop(acceptedFiles[0])
+        },
     })
 
     const style = useMemo(() => ({
         ...baseStyle,
         ...(isDragAccept ? acceptStyle : {}),
-        ...(isDragReject ? rejectStyle : {})
-    }), [
-        isDragReject,
-        isDragAccept
-    ])
+        ...(isDragReject ? rejectStyle : {}),
+    }), [isDragReject, isDragAccept])
 
     return (
         <div className="dropzone hover-fade">
             <div {...getRootProps({ style })}>
                 <input {...getInputProps()} />
-                {isDragAccept && (<IoIosCheckmarkCircle className="dropzone-caption-icon" />)}
-                {isDragReject && (<MdCancel className="dropzone-caption-icon" />)}
-                {!isDragAccept && !isDragReject && (<MdAdd className="dropzone-caption-icon" />)}
+                {isDragAccept && <IoIosCheckmarkCircle className="dropzone-caption-icon" />}
+                {isDragReject && <MdCancel className="dropzone-caption-icon" />}
+                {!isDragAccept && !isDragReject && <MdAdd className="dropzone-caption-icon" />}
             </div>
         </div>
     )

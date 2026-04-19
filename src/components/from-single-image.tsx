@@ -1,43 +1,50 @@
 import { useState } from "react"
-import { useRouter } from "next/router"
+import { useNavigate } from "react-router"
+import JSZip from "jszip"
+import ImageDropzone from "./image-dropzone"
 import AppStore from "../stores/app"
 import ThemeStore from "../stores/theme"
-import ImageDropzone from "./image-dropzone"
-import JSZip from "jszip"
+
+type PreviewFile = File & { preview: string }
 
 const CreateThemeFromSingleImage = () => {
-    const router = useRouter()
+    const navigate = useNavigate()
 
-    const [modifiedImages, setModifiedImages] = useState([])
+    const [modifiedImages, setModifiedImages] = useState<PreviewFile[]>([])
     const [errorFlag, setErrorFlag] = useState(" hidden")
     const [errorText, setErrorText] = useState("")
 
-    const createImages = file => {
+    const createImages = (file: File & { preview: string }) => {
         let brightness = 100
         for (let i = 1; i <= 8; i++) {
-            let image = document.createElement("img")
+            const image = document.createElement("img")
             image.src = file.preview
+            const index = i
+            const brightnessValue = brightness
             image.onload = () => {
-                let canvas = document.createElement("canvas")
-                let ctx = canvas.getContext("2d")
+                const canvas = document.createElement("canvas")
+                const ctx = canvas.getContext("2d")
+                if (!ctx) return
                 ctx.canvas.width = image.naturalWidth
                 ctx.canvas.height = image.naturalHeight
-                ctx.filter = "brightness(" + brightness + "%)"
+                ctx.filter = "brightness(" + brightnessValue + "%)"
                 ctx.drawImage(image, 0, 0)
                 canvas.toBlob(blob => {
-                    let modifiedImage = new File([blob], "placeholder_" + i + ".jpg", { type: "image/jpeg" })
-                    Object.assign(modifiedImage, { preview: URL.createObjectURL(modifiedImage) })
-                    setModifiedImages(modifiedImages => modifiedImages.concat(modifiedImage))
+                    if (!blob) return
+                    const modifiedImage = Object.assign(
+                        new File([blob], "placeholder_" + index + ".jpg", { type: "image/jpeg" }),
+                        { preview: URL.createObjectURL(blob) }
+                    ) as PreviewFile
+                    setModifiedImages(prev => prev.concat(modifiedImage))
                 }, "image/jpeg")
-                brightness -= 8
             }
+            brightness -= 8
         }
-        console.log(modifiedImages)
     }
 
-    const createTheme = event => {
+    const createTheme = (event: React.SyntheticEvent<HTMLFormElement>) => {
         event.preventDefault()
-        let themeName = document.forms["form"]["theme-name"].value
+        const themeName = (event.currentTarget.elements.namedItem("theme-name") as HTMLInputElement).value
         if (modifiedImages.length === 0) {
             setErrorFlag(" visible")
             setErrorText("Please upload an image.")
@@ -51,18 +58,18 @@ const CreateThemeFromSingleImage = () => {
             setErrorFlag(" hidden")
             setErrorText("")
             let count = 1
-            let zip = new JSZip()
+            const zip = new JSZip()
             modifiedImages.forEach(image => {
-                let file = new File([image], themeName + "_" + count++ + ".jpg", { type: "image/jpeg" })
+                const file = new File([image], themeName + "_" + count++ + ".jpg", { type: "image/jpeg" })
                 zip.file(file.name, file)
             })
-            let json = JSON.stringify({
+            const json = JSON.stringify({
                 imageFilename: themeName + "_*.jpg",
                 imageCredits: "Created by the .ddw Theme Creator",
                 sunriseImageList: [5, 4],
                 dayImageList: [3, 2, 1, 1, 1, 2, 3],
                 sunsetImageList: [4, 5],
-                nightImageList: [6, 7, 8, 8, 8, 7, 6]
+                nightImageList: [6, 7, 8, 8, 8, 7, 6],
             })
             zip.file(themeName + ".json", json)
             AppStore.loadingMessage = "Creating theme..."
@@ -70,7 +77,7 @@ const CreateThemeFromSingleImage = () => {
             zip.generateAsync({ type: "blob" }).then(result => {
                 ThemeStore.themeData = result
                 ThemeStore.themeName = themeName
-                router.push("/result", "/")
+                navigate("/result")
             })
         }
     }
@@ -82,15 +89,14 @@ const CreateThemeFromSingleImage = () => {
                 A theme will be created for you by modifying the brightness of the image. <br />
                 Idea originally implemented by <a className="content-link-text hover-fade" href={"https://github.com/pchalamet"} target="_blank" rel="noopener noreferrer">@pchalamet</a>.
             </div>
-            {modifiedImages.length > 0 ? null : <ImageDropzone onDrop={files => files[0] != null ? createImages(files[0]) : null} />}
+            {modifiedImages.length > 0 ? null : (
+                <ImageDropzone onDrop={files => { if (files[0]) createImages(Object.assign(files[0], { preview: URL.createObjectURL(files[0]) })) }} />
+            )}
             <div className="thumbnail-container minimize">
                 {modifiedImages.map(file => (
-                    <div className="thumbnail" key={file.name}>
+                    <div className="thumbnail" key={file.preview}>
                         <div className="thumbnail-inner">
-                            <img
-                                src={file.preview}
-                                className="thumbnail-image"
-                            />
+                            <img src={file.preview} className="thumbnail-image" />
                         </div>
                     </div>
                 ))}

@@ -1,12 +1,16 @@
+import { observer } from "mobx-react-lite"
 import Footer from "./footer"
 import LoadingOverlay from "./loading-overlay"
-import { observer } from "mobx-react"
 import AppStore from "../stores/app"
 
-const Layout = observer(props => (
+interface LayoutProps {
+    children: React.ReactNode
+}
+
+const Layout = observer(({ children }: LayoutProps) => (
     <div className="layout">
         {AppStore.loading ? <LoadingOverlay /> : null}
-        {props.children}
+        {children}
         <Footer />
     </div>
 ))

@@ -1,8 +1,15 @@
-import { observable } from "mobx"
+import { makeObservable, observable } from "mobx"
 
 class App {
-    @observable loading = false
-    @observable loadingMessage = ""
+    loading: boolean = false
+    loadingMessage: string = ""
+
+    constructor() {
+        makeObservable(this, {
+            loading: observable,
+            loadingMessage: observable,
+        })
+    }
 }
 
 export default new App()
