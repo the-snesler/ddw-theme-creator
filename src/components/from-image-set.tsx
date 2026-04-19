@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { FiSunrise, FiSun, FiSunset, FiMoon } from "react-icons/fi"
+import { FiSunrise, FiSun, FiSunset, FiMoon, FiX } from "react-icons/fi"
 import JSZip from "jszip"
 import { useNavigate } from "react-router"
 import { ReactSortable, ItemInterface } from "react-sortablejs"
@@ -97,9 +97,12 @@ const CreateThemeFromImageSet = () => {
         forceFallback: true,
     }
 
-    const renderThumbnails = (list: SortableFile[]) =>
+    const renderThumbnails = (list: SortableFile[], onDelete: (preview: string) => void) =>
         list.map(file => (
             <div className={"thumbnail draggable" + hoverFlag + dragFlag} key={file.preview}>
+                <button className="thumbnail-delete" onClick={(e) => { e.preventDefault(); onDelete(file.preview) }}>
+                    <FiX />
+                </button>
                 <div className="thumbnail-inner">
                     <img src={file.preview} className="thumbnail-image" />
                 </div>
@@ -124,7 +127,7 @@ const CreateThemeFromImageSet = () => {
                         }} />
                         <div className="thumbnail-container">
                             <ReactSortable list={sunriseThumbnails} setList={setSunriseThumbnails} {...sortableProps}>
-                                {renderThumbnails(sunriseThumbnails)}
+                                {renderThumbnails(sunriseThumbnails, (p) => setSunriseThumbnails(prev => prev.filter(f => f.preview !== p)))}
                             </ReactSortable>
                         </div>
                     </div>
@@ -139,7 +142,7 @@ const CreateThemeFromImageSet = () => {
                         }} />
                         <div className="thumbnail-container">
                             <ReactSortable list={dayThumbnails} setList={setDayThumbnails} {...sortableProps}>
-                                {renderThumbnails(dayThumbnails)}
+                                {renderThumbnails(dayThumbnails, (p) => setDayThumbnails(prev => prev.filter(f => f.preview !== p)))}
                             </ReactSortable>
                         </div>
                     </div>
@@ -154,7 +157,7 @@ const CreateThemeFromImageSet = () => {
                         }} />
                         <div className="thumbnail-container">
                             <ReactSortable list={sunsetThumbnails} setList={setSunsetThumbnails} {...sortableProps}>
-                                {renderThumbnails(sunsetThumbnails)}
+                                {renderThumbnails(sunsetThumbnails, (p) => setSunsetThumbnails(prev => prev.filter(f => f.preview !== p)))}
                             </ReactSortable>
                         </div>
                     </div>
@@ -169,7 +172,7 @@ const CreateThemeFromImageSet = () => {
                         }} />
                         <div className="thumbnail-container">
                             <ReactSortable list={nightThumbnails} setList={setNightThumbnails} {...sortableProps}>
-                                {renderThumbnails(nightThumbnails)}
+                                {renderThumbnails(nightThumbnails, (p) => setNightThumbnails(prev => prev.filter(f => f.preview !== p)))}
                             </ReactSortable>
                         </div>
                     </div>
